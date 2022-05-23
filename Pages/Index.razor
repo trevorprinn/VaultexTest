@@ -1,0 +1,48 @@
+﻿@page "/"
+@using log4net;
+@using VaultexTest.Database
+
+@inject VaultexTestContext context
+
+<PageTitle>Organisations/Employees</PageTitle>
+
+<h1>Organisations</h1>
+
+<table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Employees</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var org in orgs) {
+            <tr>
+                <td>@org.OrganisationName</td>
+                <td class="multiline">@org.GetAddress()</td>
+                <td class="multiline">@getEmployees(org)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    Organisation[] orgs = new Organisation[0];
+
+    ILog logger = LogManager.GetLogger("Index");
+
+    protected override Task OnInitializedAsync() {
+        try
+        {
+            orgs = context.Organisations?.ToArray() ?? throw new Exception("Failed to read orgs");
+            logger.Debug($"Loaded {orgs.Count()} organisations");
+        } catch (Exception ex) {
+            logger.Error("Failed to load organisations", ex);
+        }
+        return Task.CompletedTask;
+    }
+
+    string getEmployees(Organisation org) => string.Join("\r\n", context.Employees!.Where(e => e.OrganisationNumber == org.OrganisationNumber).Select(e => e.Name));
+
+}
